@@ -18,7 +18,6 @@ reverser = 1
 limitPF = 3
 healthLimit = 90
 trialNumLimit = 2
-nCounter = 17
 loadCoef = 60   #Wti change direction
 cycleSpan = 10   #60 sec / 6 sec/cycle
 designedKrated = 1  #initial value
@@ -133,8 +132,8 @@ def plcHandler(getPLC):
 
 def dataHandler(getTemp, getOil, getElect1, getElect2, getElect3, getHarmV, getHarmA, currentResult, CTratio, PTratio):
     try:
-        currentResult[0] = (round(((0.195 * getOil.registers[0]) - 37.5)*100))/100 #oiltemp
-        currentResult[1:4] = [member/10 for member in getTemp.registers] #bustemp
+        #currentResult[0] = (round(((0.195 * getOil.registers[0]) - 37.5)*100))/100 #oiltemp
+        currentResult[0:4] = [member/10 for member in getTemp.registers] #bustemp
         for i in range(1, 4):
             if currentResult[i]>240:
                 currentResult[i] = 0
@@ -313,9 +312,9 @@ def mainLoop(thread_name, interval):
             else:
                 activeParam[0] = None     
             logging.info("D07 get data from ModBus Devices")
-            getTemp = client.read_holding_registers(0, 3, slave = 3)
+            getTemp = client.read_holding_registers(0, 4, slave = 7)
             getPLC = client.read_holding_registers(55, 4, slave = 1)
-            getOil = client.read_holding_registers(54, 1, slave = 1)
+            #getOil = client.read_holding_registers(0, 1, slave = 7)
             getElect1 = client.read_holding_registers(0, 29, slave = 2)
             getElect2 = client.read_holding_registers(46, 5, slave = 2)
             getElect3 = client.read_holding_registers(800, 6, slave = 2)
@@ -324,7 +323,7 @@ def mainLoop(thread_name, interval):
             logging.info("D08 Handling received data")
             plcResult = [0]*5
             try:
-                newResult = dataHandler(getTemp, getOil, getElect1, getElect2, getElect3, getHarmV, getHarmA, currentResult, CTratio, PTratio)
+                newResult = dataHandler(getTemp, 0, getElect1, getElect2, getElect3, getHarmV, getHarmA, currentResult, CTratio, PTratio)
                 plcResult = plcHandler(getPLC)
                 if plcResult[4] == 500:
                     newResult[0][4:6] = plcResult[0:2]
